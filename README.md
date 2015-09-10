@@ -3,10 +3,29 @@
 script to switch Docker client versions locally
 
 ```
-$ ./dockerswitch
-use as: ./dockerswitch <VERSION>
-VERSION can be one of: 1.0.0 1.0.1 1.1.0 1.1.1 1.1.2 1.2.0 1.3.0 1.3.1 1.3.2 1.3.3 1.4.0 1.4.1 1.5.0 1.6.0 1.6.1 1.6.2 1.7.0 1.7.1
-$ sudo dockerswitch 1.7.1
+$ sudo ./dockerswitch 1.7.1
+```
+
+or compose versions:
+
+```
+$ ./dockercomposeswitch 1.3.1
+```
+
+To see list of versions run with a dummy argument:
+
+```
+» ./dockercomposeswitch dummy
+Wrong version: dummy
+use as: ./dockercomposeswitch <VERSION>
+VERSION can be one of: 1.4.0 1.3.3 1.3.2 1.3.1 1.3.0 1.2.0
+```
+
+
+## Install 
+```
+sudo cp ./dockerswitch /usr/local/bin/dockerswitch
+sudo ln -s /usr/local/bin/dockerswitch /usr/local/bin/dockercomposeswitch
 ```
 
 Works on reasonable Linux and OS X.

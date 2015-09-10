@@ -1,25 +1,41 @@
 #!/bin/bash
 
-DOCKER_VERSIONS=( 1.0.0 1.0.1 1.1.0 1.1.1 1.1.2 1.2.0 1.3.0 1.3.1 1.3.2 1.3.3 1.4.0 1.4.1 1.5.0 1.6.0 1.6.1 1.6.2 1.7.0 1.7.1 )
+#docker versions
+VERSIONS=( 1.0.0 1.0.1 1.1.0 1.1.1 1.1.2 1.2.0 1.3.0 1.3.1 1.3.2 1.3.3 1.4.0 1.4.1 1.5.0 1.6.0 1.6.1 1.6.2 1.7.0 1.7.1 )
+BINNAME=docker
+
+RUNNER=`basename $0`
+
+if [ "$RUNNER" = "dockercomposeswitch" ]; then
+    BINNAME="docker-compose"
+    VERSIONS=( 1.4.0 1.3.3 1.3.2 1.3.1 1.3.0 1.2.0 )
+fi
 
 DSDIR=/opt/dockerswitch
 
-EXECUTABLE=/usr/bin/docker
-[ "$(uname -s)" = "Darwin" ] && EXECUTABLE=/usr/local/bin/docker
+EXECUTABLE=/usr/bin/${BINNAME}
+[ "$(uname -s)" = "Darwin" ] && EXECUTABLE=/usr/local/bin/${BINNAME}
 
 usage () {
     echo use as: $0 "<VERSION>"
-    echo VERSION can be one of: "${DOCKER_VERSIONS[@]}"
+    echo VERSION can be one of: "${VERSIONS[@]}"
     exit 1
 }
 
 getversion () {
     mkdir -p $DSDIR
     V=$1
-    F=${DSDIR}/docker-${V}
-    BLDS="https://get.docker.com/builds"
-    echo "Downloading ${BLDS}/`uname -s`/`uname -m`/docker-${V} to $F"
-    curl -L ${BLDS}/`uname -s`/`uname -m`/docker-${V} -o "$F"
+    F=${DSDIR}/${BINNAME}-${V}
+
+    URL="https://get.docker.com/builds/`uname -s`/`uname -m`/${BINNAME}-${V}"
+    if [ "$RUNNER" = "dockercomposeswitch" ]; then
+        URL="https://github.com/docker/compose/releases/download/${V}/docker-compose-`uname -s`-`uname -m`"
+    fi
+    curl -f -L ${URL} -o "$F"
+    if [ $? -ne 0 ]; then
+        echo "problem downloading from $URL"
+        exit 1
+    fi
     chmod +x "$F"
 }
 
@@ -35,7 +51,8 @@ if [ $# -eq 0 ]; then
     if [ ! -L "$EXECUTABLE" ]; then
         echo $EXECUTABLE is not symlink, you did not use dockerswitch yet
     else
-        echo basename `readlink $EXECUTABLE` | cut -f 2 -d'-'
+        echo "Currrently linked to $EXECUTABLE is:"
+        readlink $EXECUTABLE
     fi
     exit 0 
 fi
@@ -44,7 +61,7 @@ if [ $# -ne 1 ]; then
     usage
 fi
 
-if ! contains "$1" "${DOCKER_VERSIONS[@]}"; then
+if ! contains "$1" "${VERSIONS[@]}"; then
     echo "Wrong version: $1"
     usage
 fi
@@ -54,7 +71,7 @@ if [ ! "`id -u`" = "0" ]; then
     usage
 fi
 
-F="$DSDIR/docker-${1}"
+F="$DSDIR/${BINNAME}-${1}"
 
 [ -f "$F" ] || getversion $1
 if [ ! -L "$EXECUTABLE" ]; then
